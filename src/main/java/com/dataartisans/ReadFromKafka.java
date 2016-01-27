@@ -90,7 +90,7 @@ public class ReadFromKafka {
 				String valueTrim = value.substring(1, value.length());
 				JSONParser parser = new JSONParser(valueTrim);
 				if (parser.parse("type_instance").getString("retValue").equals("free")) {
-					out.collect(new Tuple2<String, Long>(parser.parse("host").getString("retValue"),
+					out.collect(new Tuple2<>(parser.parse("host").getString("retValue"),
 							parser.parse("values").getJSONArray("retValue").getLong(0)));
 				}
 			} catch (JSONException e) {
