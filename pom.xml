@@ -20,13 +20,13 @@ under the License.
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<groupId>edu.clemson.bda</groupId>
-	<artifactId>tls-adaptive</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<groupId>edu.clemson.bigdata</groupId>
+	<artifactId>tls-monitor</artifactId>
+	<version>0.1</version>
 	<packaging>jar</packaging>
 
-	<name>Adaptive Two-level Storage System</name>
-	<url>http://bda.clemson.edu/tls</url>
+	<name>Monitor Module for Two-level Storage System</name>
+	<url>http://bigdata.clemson.edu/tls</url>
 
 	<developers>
 		<developer>
@@ -35,13 +35,13 @@ under the License.
 			<email>pfxuan@gmail.com</email>
 			<url>http://hsuan.net</url>
 			<organization>School of Computing, Clemson University</organization>
-			<organizationUrl>http://www.cs.clemson.edu/</organizationUrl>
+			<organizationUrl>http://bigdata.clemson.edu/</organizationUrl>
 		</developer>
 	</developers>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<flink.version>0.10.1</flink.version>
+		<flink.version>1.0.1</flink.version>
 	</properties>
 
 	<repositories>
@@ -56,6 +56,19 @@ under the License.
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		<!--
+		<repository>
+			<id>apache.snapshots</id>
+			<name>Apache Development Snapshot Repository</name>
+			<url>https://repository.apache.org/content/repositories/snapshots/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		-->
 	</repositories>
 	
 	<!-- 
@@ -90,22 +103,22 @@ under the License.
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-streaming-java</artifactId>
+			<artifactId>flink-streaming-java_2.10</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-clients</artifactId>
+			<artifactId>flink-clients_2.10</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-connector-kafka</artifactId>
+			<artifactId>flink-connector-kafka-0.9_2.10</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-connector-twitter</artifactId>
+			<artifactId>flink-connector-twitter_2.10</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
 	</dependencies>
@@ -234,7 +247,7 @@ under the License.
 							<transformers>
 								<!-- add Main-Class to manifest file -->
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>edu.clemson.bda.AdaptiveTLS</mainClass>
+									<mainClass>edu.clemson.bigdata.tls.ReadFromKafka</mainClass>
 								</transformer>
 							</transformers>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
@@ -251,7 +264,7 @@ under the License.
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Main-Class>edu.clemson.bda.Job</Main-Class>
+							<Main-Class>edu.clemson.bigdata.tls.ReadFromKafka</Main-Class>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -332,7 +345,7 @@ under the License.
 	</build>
 	<profiles>
 		<profile>
-			<!-- A profile that does everyting correctly:
+			<!-- A profile that does everything correctly:
 			We set the Flink dependencies to provided -->
 			<id>build-jar</id>
 			<activation>
@@ -347,13 +360,13 @@ under the License.
 				</dependency>
 				<dependency>
 					<groupId>org.apache.flink</groupId>
-					<artifactId>flink-streaming-java</artifactId>
+					<artifactId>flink-streaming-java_2.10</artifactId>
 					<version>${flink.version}</version>
 					<scope>provided</scope>
 				</dependency>
 				<dependency>
 					<groupId>org.apache.flink</groupId>
-					<artifactId>flink-clients</artifactId>
+					<artifactId>flink-clients_2.10</artifactId>
 					<version>${flink.version}</version>
 					<scope>provided</scope>
 				</dependency>
