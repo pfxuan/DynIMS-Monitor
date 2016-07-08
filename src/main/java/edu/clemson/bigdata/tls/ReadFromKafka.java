@@ -65,8 +65,8 @@ public class ReadFromKafka {
 		env.setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 1000L));
 		//env.enableCheckpointing(5000);
 		env.setParallelism(4);
-		//env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-		env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+		//env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
 		// Parses user parameters
 		ParameterTool parameterTool = ParameterTool.fromArgs(args);
