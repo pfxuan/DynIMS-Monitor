@@ -65,6 +65,7 @@ public class ReadFromKafka {
 		env.setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 1000L));
 		//env.enableCheckpointing(5000);
 		env.setParallelism(4);
+		env.getConfig().setAutoWatermarkInterval(1000L);
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 		//env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
