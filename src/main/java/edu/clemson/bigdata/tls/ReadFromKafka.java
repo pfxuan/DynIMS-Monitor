@@ -122,7 +122,7 @@ public class ReadFromKafka {
 	}
 
 	public static class ComputeInMemorySize extends RichWindowFunction<
-			Iterable<CollectdRecord>, 		// input type
+			CollectdRecord, 							// input type
 			String,												// output type
 			String,         							// key type
 			TimeWindow>         			    // window type
@@ -210,6 +210,7 @@ public class ReadFromKafka {
 				//out.collect("=======" + inMemSizeState.value());
 			}
 		}
+
 	}
 
 
