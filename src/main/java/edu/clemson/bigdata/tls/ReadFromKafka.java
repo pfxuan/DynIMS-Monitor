@@ -17,6 +17,9 @@
  */
 package edu.clemson.bigdata.tls;
 
+import static java.util.Objects.requireNonNull;
+
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeutils.base.LongSerializer;
@@ -25,9 +28,10 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.TimestampExtractor;
+import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.windowing.RichWindowFunction;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingTimeWindows;
+import org.apache.flink.streaming.api.watermark.Watermark;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer09;
@@ -58,7 +62,7 @@ public class ReadFromKafka {
 		env.registerType(CollectdRecord.class);
 
 		env.getConfig().disableSysoutLogging();
-		env.setNumberOfExecutionRetries(4);
+		env.setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 1000L));
 		//env.enableCheckpointing(5000);
 		env.setParallelism(4);
 		//env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -75,27 +79,32 @@ public class ReadFromKafka {
 						parameterTool.getProperties())
 				)
 				// Assign timestamp using collectd event time
-				.assignTimestamps(new TimestampExtractor<CollectdRecord>() {
+				.assignTimestampsAndWatermarks(new AssignerWithPeriodicWatermarks<CollectdRecord>() {
+
+					/** The current timestamp. */
+					private long currentTimestamp = Long.MIN_VALUE;
+
 					@Override
-					public long extractTimestamp(CollectdRecord collectdRecord, long l) {
-						return collectdRecord.getTime();
+					public final long extractTimestamp(CollectdRecord element, long elementPrevTimestamp) {
+						final long newTimestamp = element.getTime();
+						if (newTimestamp >= this.currentTimestamp) {
+							this.currentTimestamp = newTimestamp;
+							return newTimestamp;
+						} else {
+							return newTimestamp;
+						}
 					}
 
 					@Override
-					public long extractWatermark(CollectdRecord collectdRecord, long l) {
-						return collectdRecord.getTime() - 1000;
-					}
-
-					@Override
-					public long getCurrentWatermark() {
-						return Long.MIN_VALUE;
+					public final Watermark getCurrentWatermark() {
+						return new Watermark(currentTimestamp == Long.MIN_VALUE ? Long.MIN_VALUE : currentTimestamp - 1000);
 					}
 				});
 
 		// Compute in-memory storage size
 		DataStream<String> controllerStream = collectdStream
 				.keyBy( record -> record.getHost() )
-				.window(TumblingTimeWindows.of(Time.seconds(1)))
+				.window(TumblingEventTimeWindows.of(Time.seconds(1)))
 				//.timeWindow(Time.seconds(1), Time.seconds(1))
 				.apply(new ComputeInMemorySize());
 
