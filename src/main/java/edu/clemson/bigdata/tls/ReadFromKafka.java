@@ -72,7 +72,7 @@ public class ReadFromKafka {
 		// Parses user parameters
 		ParameterTool parameterTool = ParameterTool.fromArgs(args);
 
-		// Adds Kafka source
+		// Adds Kafka source and assigns event timestamp
 		DataStream<CollectdRecord> collectdStream = env
 				.addSource(new FlinkKafkaConsumer09(
 						parameterTool.getRequired("topic.in"),
@@ -128,11 +128,12 @@ public class ReadFromKafka {
 
 		/** The state handle for the size of in-memory storage space */
 		private ValueState<Long> inMemSizeState;
-		private ValueState<Long> cachedMemSizeState;
-		private static long TOTAL_MEM_SIZE = 135206658048L;
-		private static long RAMDISK_QUOTA = 64424509440L;
+		//private ValueState<Long> cachedMemSizeState;
+		private static long TOTAL_MEM_SIZE = 135199723520L; // 125.9 GiB
+		private static long RAMDISK_QUOTA = 64424509440L; // 60 GiB
 		private static float LAMBDA = 1.0f;
 		private static float MEM_UTILIZATION_REF = 0.95f;
+		private static float FREE_MEM_REF = 1 - MEM_UTILIZATION_REF;
 		private static long FREE_MEM_REF_SIZE = (long) ((1.0f - MEM_UTILIZATION_REF) * TOTAL_MEM_SIZE);
 		private static long FREE_MEM_REF_DEVIATION_SIZE = 512 * 1024 * 1024;
 		private static long BLOCK_SIZE = 512 * 1024 * 1024;
@@ -141,8 +142,8 @@ public class ReadFromKafka {
 		public void open(Configuration config) throws Exception {
 			inMemSizeState = getRuntimeContext().getState(
 					new ValueStateDescriptor<Long>("inMemSizeState", LongSerializer.INSTANCE, RAMDISK_QUOTA)); // 60GB in-memory size
-			cachedMemSizeState = getRuntimeContext().getState(
-					new ValueStateDescriptor<Long>("cachedMemSizeState", LongSerializer.INSTANCE, 0L)); // 0GB cached size
+			//cachedMemSizeState = getRuntimeContext().getState(
+			//		new ValueStateDescriptor<Long>("cachedMemSizeState", LongSerializer.INSTANCE, 0L)); // 0GB cached size
 		}
 
 		@Override
@@ -191,7 +192,8 @@ public class ReadFromKafka {
 					&& Math.abs(freeMemSize - FREE_MEM_REF_SIZE ) >= FREE_MEM_REF_DEVIATION_SIZE) {
 				// Calculate the next in-memory storage size
 				// long nextInMemSize = inMemSizeState.value() - (long) ((float) LAMBDA * usedMemSize * ((float) usedMemSize / TOTAL_MEM_SIZE - FREE_MEM_REF) / FREE_MEM_REF);
-				long nextInMemSize = usedRamDiskSize + (freeMemSize - FREE_MEM_REF_SIZE);
+				long nextInMemSize = inMemSizeState.value() - (long) (LAMBDA * (float) usedMemSize * ((float) (usedMemSize / TOTAL_MEM_SIZE) - MEM_UTILIZATION_REF) / MEM_UTILIZATION_REF);
+				//long nextInMemSize = usedRamDiskSize + (freeMemSize - FREE_MEM_REF_SIZE);
 				nextInMemSize = (Math.floorDiv(nextInMemSize, BLOCK_SIZE) + 1) * BLOCK_SIZE;
 
 				// In-memory storage size should be in the range of [0, RAMDISK_QUOTA]
@@ -200,6 +202,7 @@ public class ReadFromKafka {
 				if (nextInMemSize != inMemSizeState.value()) {
 					// update in-memory size
 					inMemSizeState.update(nextInMemSize);
+					// Eviction size for data node
 					out.collect(host + "\t" + Long.toString(RAMDISK_QUOTA - nextInMemSize));
 				} else {
 					//out.collect("=======" + "\t" + nextInMemSize);
