@@ -131,7 +131,7 @@ public class ReadFromKafka {
 		//private ValueState<Long> cachedMemSizeState;
 		private static long TOTAL_MEM_SIZE = 135199723520L; // 125.9 GiB
 		private static long RAMDISK_QUOTA = 64424509440L; // 60 GiB
-		private static float LAMBDA = 1.0f;
+		private static float LAMBDA = 0.65f;
 		private static float MEM_UTILIZATION_REF = 0.95f;
 		private static float FREE_MEM_REF = 1 - MEM_UTILIZATION_REF;
 		private static long FREE_MEM_REF_SIZE = (long) ((1.0f - MEM_UTILIZATION_REF) * TOTAL_MEM_SIZE);
@@ -192,7 +192,7 @@ public class ReadFromKafka {
 					&& Math.abs(freeMemSize - FREE_MEM_REF_SIZE ) >= FREE_MEM_REF_DEVIATION_SIZE) {
 				// Calculate the next in-memory storage size
 				// long nextInMemSize = inMemSizeState.value() - (long) ((float) LAMBDA * usedMemSize * ((float) usedMemSize / TOTAL_MEM_SIZE - FREE_MEM_REF) / FREE_MEM_REF);
-				long nextInMemSize = inMemSizeState.value() - (long) (LAMBDA * (float) usedMemSize * ((float) (usedMemSize / TOTAL_MEM_SIZE) - MEM_UTILIZATION_REF) / MEM_UTILIZATION_REF);
+				long nextInMemSize = inMemSizeState.value() - (long) (LAMBDA * (float) usedMemSize * ((float) usedMemSize / (float) TOTAL_MEM_SIZE - MEM_UTILIZATION_REF) / MEM_UTILIZATION_REF);
 				//long nextInMemSize = usedRamDiskSize + (freeMemSize - FREE_MEM_REF_SIZE);
 				nextInMemSize = (Math.floorDiv(nextInMemSize, BLOCK_SIZE) + 1) * BLOCK_SIZE;
 
