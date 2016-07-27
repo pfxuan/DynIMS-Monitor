@@ -141,7 +141,7 @@ public class ReadFromKafka {
 		@Override
 		public void open(Configuration config) throws Exception {
 			inMemSizeState = getRuntimeContext().getState(
-					new ValueStateDescriptor<Long>("inMemSizeState", LongSerializer.INSTANCE, RAMDISK_QUOTA)); // 60GB in-memory size
+					new ValueStateDescriptor<Long>("inMemSizeState", LongSerializer.INSTANCE, -1L)); // 60GB in-memory size
 			//cachedMemSizeState = getRuntimeContext().getState(
 			//		new ValueStateDescriptor<Long>("cachedMemSizeState", LongSerializer.INSTANCE, 0L)); // 0GB cached size
 		}
@@ -192,7 +192,7 @@ public class ReadFromKafka {
 					&& Math.abs(freeMemSize - FREE_MEM_REF_SIZE ) >= FREE_MEM_REF_DEVIATION_SIZE) {
 				// Calculate the next in-memory storage size
 				// long nextInMemSize = inMemSizeState.value() - (long) ((float) LAMBDA * usedMemSize * ((float) usedMemSize / TOTAL_MEM_SIZE - FREE_MEM_REF) / FREE_MEM_REF);
-				if (inMemSizeState.value() == RAMDISK_QUOTA) inMemSizeState.update(usedRamDiskSize);
+				if (inMemSizeState.value() == -1L) inMemSizeState.update(usedRamDiskSize);
 				long nextInMemSize = inMemSizeState.value() - (long) (LAMBDA * (float) usedMemSize * ((float) usedMemSize / (float) TOTAL_MEM_SIZE - MEM_UTILIZATION_REF) / MEM_UTILIZATION_REF);
 				//long nextInMemSize = usedRamDiskSize + (freeMemSize - FREE_MEM_REF_SIZE);
 				nextInMemSize = (Math.floorDiv(nextInMemSize, BLOCK_SIZE) + 1) * BLOCK_SIZE;
