@@ -201,7 +201,7 @@ public class ReadFromKafka {
 					// update in-memory size
 					inMemSizeState.update(nextInMemSize);
 					// Eviction size for data node
-          long unusedInMemorySpace = (float) usedMemSize / (float) TOTAL_MEM_SIZE <= MEM_UTILIZATION_REF ? RAMDISK_QUOTA - usedRamDiskSize : 0L;
+          long unusedInMemorySpace = (float) usedMemSize / (float) TOTAL_MEM_SIZE >= MEM_UTILIZATION_REF ? RAMDISK_QUOTA - usedRamDiskSize : 0L;
 					out.collect(host + "\t" + Long.toString(RAMDISK_QUOTA - nextInMemSize + unusedInMemorySpace));
 				} else {
 					//out.collect("=======" + "\t" + nextInMemSize);
