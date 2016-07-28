@@ -136,7 +136,7 @@ public class ReadFromKafka {
 		private static float FREE_MEM_REF = 1 - MEM_UTILIZATION_REF;
 		private static long FREE_MEM_REF_SIZE = (long) ((1.0f - MEM_UTILIZATION_REF) * TOTAL_MEM_SIZE);
 		private static long FREE_MEM_REF_DEVIATION_SIZE = 1024 * 1024 * 1024;
-		private static long BLOCK_SIZE = 512 * 1024 * 1024;
+    private static long BLOCK_SIZE = 512 * 1024 * 1024;
 
 		@Override
 		public void open(Configuration config) throws Exception {
@@ -203,7 +203,8 @@ public class ReadFromKafka {
 					// update in-memory size
 					inMemSizeState.update(nextInMemSize);
 					// Eviction size for data node
-					out.collect(host + "\t" + Long.toString(2 * RAMDISK_QUOTA - nextInMemSize - usedRamDiskSize));
+          long unusedInMemorySpace = (float) usedMemSize / (float) TOTAL_MEM_SIZE <= MEM_UTILIZATION_REF ? RAMDISK_QUOTA - usedRamDiskSize : 0L;
+					out.collect(host + "\t" + Long.toString(RAMDISK_QUOTA - nextInMemSize + unusedInMemorySpace));
 				} else {
 					//out.collect("=======" + "\t" + nextInMemSize);
 				}
