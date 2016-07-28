@@ -17,8 +17,6 @@
  */
 package edu.clemson.bigdata.tls;
 
-import static java.util.Objects.requireNonNull;
-
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
